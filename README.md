@@ -1,4 +1,4 @@
-# API de Alimentos - [Nome do Seu Projeto Específico, se houver]
+# API de Alimentos
 
 API criada para AV3 de Programação Funcional e visa mostrar as calorias ganhadas ou perdidas num intervalo de tempo.
 
