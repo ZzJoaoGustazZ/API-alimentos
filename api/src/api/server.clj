@@ -4,7 +4,7 @@
     (:gen-class))
 
 (defn -main
-      "Inicia o servidor na porta 3000"
+      "Inicia o servidor na porta 30000"
       [& _]
       (println "Servidor iniciado em http://localhost:3000")
       (run-jetty app {:port 3000 :join? true}))
