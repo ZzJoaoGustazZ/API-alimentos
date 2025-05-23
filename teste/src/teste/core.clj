@@ -34,15 +34,18 @@
            (print "Seu peso em kg (ex: 70.5): ") (flush)
            (let [peso (try (Double/parseDouble (read-line))
                            (catch NumberFormatException _
-                             (println "Peso inválido. Tente novamente.")
-                             (solicitar-info-usuario)
+                             (println "Peso inválido. Por favor, insira um número.")
                              0.0)
-                           (catch Exception _ (println "Erro inesperado ao ler o peso.") 0.0))]
+                           (catch Exception _
+                             (println "Erro inesperado ao ler o peso.")
+                             0.0))]
                 (if (> peso 0)
                   (do
                     (swap! usuario-atual assoc :nome nome :peso_kg peso)
                     (println (str "\nOlá, " nome "! Peso: " peso " kg.\n")))
-                  (println "Peso deve ser maior que zero.")))))
+                  (do
+                    (println "Peso deve ser maior que zero. Tente novamente.")
+                    (solicitar-info-usuario))))))
 
 (defn adicionar-refeicao []
       (println "\n--- Adicionar Refeição ---")
@@ -81,7 +84,6 @@
                                                                 :calorias (:calorias info-alimento-escolhido)
                                                                 :data_refeicao data-refeicao}]
                                          (println (str "Registando '" (:nome alimento-para-salvar) "' no seu diário para a data " data-refeicao "..."))
-                                         ;; CORREÇÃO DO ENDPOINT CHAMADO:
                                          (let [res-backend (fazer-requisicao-http :post (str meu-backend-api-url "/adicionar-alimento") nil alimento-para-salvar)]
                                               (if (:erro res-backend)
                                                 (println (str "Erro ao registar no backend: " (or (:detalhes res-backend) res-backend)))
@@ -113,30 +115,58 @@
                                                  ", Data: " (:data_registro res-backend)
                                                  ", ID do Registo: " (:id_registro_exercicio res-backend)))))))))))
 
+(defn- extrair-numero-calorias [valor-calorias]
+       "Extrai o primeiro número de uma string de calorias (ex: '133 kcal' -> 133)."
+       (if (number? valor-calorias)
+         valor-calorias
+         (try
+           (Integer/parseInt (first (re-seq #"\d+" (str valor-calorias))))
+           (catch Exception _ 0))))
+
 (defn consultar-registros-dia []
-      (println "\n--- Consultar Registos do Dia ---")
+      (println "\n--- Consultar Registos e Balanço do Dia ---")
       (print "Digite a data para consulta (AAAA-MM-DD): ") (flush)
       (let [data-consulta (read-line)]
            (if (str/blank? data-consulta) (println "Data é obrigatória.")
                                           (do
-                                            (println (str "\n--- Alimentos em " data-consulta " ---"))
-                                            (let [alimentos (fazer-requisicao-http :get (str meu-backend-api-url "/log/alimentos") {"data" data-consulta} nil)]
-                                                 (if (or (:erro alimentos) (empty? alimentos))
-                                                   (println (str "  " (or (:detalhes alimentos) "Nenhum alimento registado para esta data.")))
-                                                   (doseq [a alimentos] (println (str "- " (:nome a) " (" (:quantidade a) "): " (:calorias a))))))
+                                            (println (str "\n--- Alimentos Consumidos em " data-consulta " ---"))
+                                            (let [alimentos-resp (fazer-requisicao-http :get (str meu-backend-api-url "/log/alimentos") {"data" data-consulta} nil)
+                                                  alimentos (if (:erro alimentos-resp) [] alimentos-resp)
+                                                  total-calorias-consumidas (reduce + 0 (map #(extrair-numero-calorias (:calorias %)) alimentos))]
 
-                                            (println (str "\n--- Exercícios em " data-consulta " ---"))
-                                            (let [exercicios (fazer-requisicao-http :get (str meu-backend-api-url "/log/exercicios") {"data" data-consulta} nil)]
-                                                 (if (or (:erro exercicios) (empty? exercicios))
-                                                   (println (str "  " (or (:detalhes exercicios) "Nenhum exercício registado para esta data.")))
-                                                   (doseq [e exercicios] (println (str "- " (:nome_exercicio_pt e) ": " (:calorias_queimadas e) " kcal")))))
-                                            ))))
+                                                 (if (:erro alimentos-resp)
+                                                   (println (str "  Erro ao buscar alimentos: " (or (:detalhes alimentos-resp) alimentos-resp)))
+                                                   (if (empty? alimentos)
+                                                     (println "  Nenhum alimento registado para esta data.")
+                                                     (doseq [a alimentos] (println (str "- " (:nome a) " (" (:quantidade a) "): " (:calorias a))))))
+                                                 ;; total-calorias-consumidas está agora disponível para o escopo externo deste let
+
+                                                 (println (str "\n--- Exercícios Feitos em " data-consulta " ---"))
+                                                 (let [exercicios-resp (fazer-requisicao-http :get (str meu-backend-api-url "/log/exercicios") {"data" data-consulta} nil)
+                                                       exercicios (if (:erro exercicios-resp) [] exercicios-resp)
+                                                       total-calorias-gastas (reduce + 0 (map #(extrair-numero-calorias (:calorias_queimadas %)) exercicios))]
+
+                                                      (if (:erro exercicios-resp)
+                                                        (println (str "  Erro ao buscar exercícios: " (or (:detalhes exercicios-resp) exercicios-resp)))
+                                                        (if (empty? exercicios)
+                                                          (println "  Nenhum exercício registado para esta data.")
+                                                          (doseq [e exercicios] (println (str "- " (:nome_exercicio_pt e) ": " (:calorias_queimadas e) " kcal")))))
+                                                      ;; total-calorias-gastas está agora disponível
+
+                                                      ;; Calcular e mostrar o balanço usando os totais já calculados
+                                                      (println "\n-----------------------------------------")
+                                                      (println (str "BALANÇO CALÓRICO DO DIA (" data-consulta "):"))
+                                                      (println (str "  Calorias Consumidas: " total-calorias-consumidas " kcal"))
+                                                      (println (str "  Calorias Gastas (Exercício): " total-calorias-gastas " kcal"))
+                                                      (println (str "  Resultado (Consumidas - Gastas): " (- total-calorias-consumidas total-calorias-gastas) " kcal"))
+                                                      (println "-----------------------------------------")
+                                                      (println "(Nota: Este balanço não inclui o metabolismo basal.)")))))))
 
 (defn mostrar-menu []
       (println "\nOpções:")
       (println "1. Adicionar refeição")
       (println "2. Adicionar exercício")
-      (println "3. Consultar registos do dia")
+      (println "3. Consultar registos e balanço do dia")
       (println "4. Finalizar")
       (print "Escolha: ") (flush))
 

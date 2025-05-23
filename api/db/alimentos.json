@@ -1,25 +1,13 @@
 [ {
-  "nome" : "Leite de amêndoas",
-  "quantidade" : "1 xícara (235 g)",
-  "calorias" : "40 kcal",
+  "nome" : "Cuca com farofa",
+  "quantidade" : "1 pedaço (57 g)",
+  "calorias" : "251 kcal",
   "data_refeicao" : "2005-01-01",
-  "id_registro_consumo" : 1747968320969
+  "id_registro_consumo" : 1747970131815
 }, {
-  "nome" : "Leite",
-  "quantidade" : "1 xícara (244 ml)",
-  "calorias" : "149 kcal",
+  "nome" : "Arroz frito",
+  "quantidade" : "1 porção (356 g)",
+  "calorias" : "662 kcal",
   "data_refeicao" : "2005-01-01",
-  "id_registro_consumo" : 1747967387891
-}, {
-  "nome" : "Arroz integral",
-  "quantidade" : "1 xícara (185 g)",
-  "calorias" : "670 kcal",
-  "data_refeicao" : "2005-01-02",
-  "id_registro_consumo" : 1747967339023
-}, {
-  "nome" : "Arroz doce",
-  "quantidade" : "1 xícara (225 g)",
-  "calorias" : "302 kcal",
-  "data_refeicao" : "2005-01-01",
-  "id_registro_consumo" : 1747967295799
+  "id_registro_consumo" : 1747970083857
 } ]
