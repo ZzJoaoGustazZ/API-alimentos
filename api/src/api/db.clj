@@ -3,9 +3,15 @@
       [clojure.java.io :as io]
       [clojure.string :as str]))
 
+
+
 (def db-dir-path "db")
+
 (def alimentos-db-path (str db-dir-path "/alimentos.json"))
 (def exercicios-db-path (str db-dir-path "/exercicios.json"))
+
+
+
 
 (defn- garantir-diretorio-db! []
        (let [db-dir (io/file db-dir-path)]
@@ -15,6 +21,10 @@
                         (println (str "Diretório '" db-dir-path "' criado."))
                         (catch Exception e
                           (println (str "Falha ao criar diretório '" db-dir-path "': " (.getMessage e))))))))
+
+
+
+
 
 (defn- ler-lista-do-arquivo [path-arquivo]
        (garantir-diretorio-db!)
@@ -27,6 +37,11 @@
                   (catch Exception _ []))))
          []))
 
+
+
+
+
+
 (defn- salvar-lista-no-arquivo [path-arquivo dados-lista]
        (garantir-diretorio-db!)
        (try
@@ -35,17 +50,23 @@
          (catch Exception e
            (println (str "AVISO: Falha ao salvar o arquivo " path-arquivo ": " (.getMessage e))))))
 
+
+
+
+
+
+
 ;; --- Funções para Alimentos ---
 
 (defn ler-alimentos []
       (ler-lista-do-arquivo alimentos-db-path))
 
+
 (defn salvar-alimentos [alimentos]
       (salvar-lista-no-arquivo alimentos-db-path alimentos))
 
+
 (defn adicionar-alimento
-      "Adiciona um alimento à lista.
-       O mapa 'alimento' deve conter :nome, :quantidade, :calorias e :data_refeicao."
       [alimento]
       (let [alimentos-atuais (ler-alimentos)
             ;; CORREÇÃO AQUI: Usar :id_registro_consumo para consistência com o schema da rota
@@ -53,17 +74,24 @@
            (salvar-alimentos (conj alimentos-atuais alimento-com-id))
            alimento-com-id))
 
+
+
 (defn listar-alimentos []
       (ler-alimentos))
+
 
 (defn listar-alimentos-por-data
       "Lista alimentos consumidos em uma data específica (AAAA-MM-DD)."
       [data-str]
       (filter #(= (:data_refeicao %) data-str) (ler-alimentos)))
 
+
+
 (defn apagar-todos-alimentos []
       (salvar-alimentos [])
       {:mensagem "Todos os alimentos foram removidos."})
+
+
 
 (defn apagar-alimento-por-nome [nome]
       (let [atual (ler-alimentos)
@@ -71,42 +99,63 @@
            (salvar-alimentos filtrado)
            {:mensagem (str "Alimentos com nome \"" nome "\" foram removidos.")}))
 
+
+
+
+
+
+
+
+
 ;; --- Funções para Exercícios ---
 
 (defn ler-exercicios []
       (ler-lista-do-arquivo exercicios-db-path))
 
+
 (defn salvar-exercicios [exercicios]
       (salvar-lista-no-arquivo exercicios-db-path exercicios))
 
+
 (defn adicionar-exercicio
-      "Adiciona um exercício à lista.
-       O mapa 'exercicio' deve conter :nome_exercicio_pt, :calorias_queimadas e :data_registro."
+
       [exercicio]
       (let [exercicios-atuais (ler-exercicios)
-            ;; CORREÇÃO AQUI (para consistência, embora o erro não fosse aqui):
-            ;; Usar :id_registro_exercicio para corresponder ao schema ExercicioLogadoResponse
             exercicio-com-id (assoc exercicio :id_registro_exercicio (System/currentTimeMillis))]
            (salvar-exercicios (conj exercicios-atuais exercicio-com-id))
            exercicio-com-id))
 
+
+
 (defn listar-exercicios []
       (ler-exercicios))
 
+
+
+
 (defn listar-exercicios-por-data
-      "Lista exercícios feitos em uma data específica (AAAA-MM-DD)."
       [data-str]
       (filter #(= (:data_registro %) data-str) (ler-exercicios)))
+
+
+
+
 
 (defn apagar-todos-exercicios []
       (salvar-exercicios [])
       {:mensagem "Todos os exercícios foram removidos."})
+
+
+
 
 (defn apagar-exercicio-por-nome [nome-exercicio-pt]
       (let [atual (ler-exercicios)
             filtrado (vec (remove #(= (:nome_exercicio_pt %) nome-exercicio-pt) atual))]
            (salvar-exercicios filtrado)
            {:mensagem (str "Exercícios com nome \"" nome-exercicio-pt "\" foram removidos.")}))
+
+
+
 
 ;; --- Função Geral para Limpar Tudo (Opcional) ---
 (defn apagar-tudo-db []

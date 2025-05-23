@@ -1,4 +1,10 @@
 [ {
+  "nome" : "Sopa de tomate e arroz",
+  "quantidade" : "1 xícara (247 g)",
+  "calorias" : "116 kcal",
+  "data_refeicao" : "2000",
+  "id_registro_consumo" : 1747971631760
+}, {
   "nome" : "Cuca com farofa",
   "quantidade" : "1 pedaço (57 g)",
   "calorias" : "251 kcal",

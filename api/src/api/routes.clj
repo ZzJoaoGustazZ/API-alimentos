@@ -7,6 +7,10 @@
       [api.exercicios :as exercicios-api]
       [api.calorias :as calorias]))
 
+
+
+
+
 ;; --- Schemas de Alimentos ---
 (s/defschema AlimentoParaSalvar
              {:nome s/Str
@@ -14,19 +18,35 @@
               :calorias s/Str
               :data_refeicao s/Str})
 
+
+
 (s/defschema AlimentoLogadoResponse
              (assoc AlimentoParaSalvar
                     :id_registro_consumo s/Int))
 
+
+
 (s/defschema AlimentoBuscaInfoPayload
              {:nome s/Str})
+
+
 
 (s/defschema InfoAlimentoEncontrado
              {:descricao s/Str
               :quantidade s/Str
               :calorias s/Str})
 
+
+
 (s/defschema ListaInfoAlimentosResponse [InfoAlimentoEncontrado])
+
+
+
+
+
+
+
+
 
 ;; --- Schemas de Exercícios ---
 (s/defschema MetSuccessResponse
@@ -34,8 +54,12 @@
               :met s/Num
               (s/optional-key :aviso_traducao) s/Str})
 
+
+
 (s/defschema MetErrorResponse
              {:erro s/Str})
+
+
 
 (s/defschema LogExercicioPayload
              {:nome_exercicio_original s/Str
@@ -43,24 +67,36 @@
               :peso_kg s/Num
               :data_exercicio s/Str})
 
+
+
 (s/defschema ExercicioLogadoResponse
              {:id_registro_exercicio s/Int
               :nome_exercicio_pt s/Str
               :calorias_queimadas s/Num
               :data_registro s/Str})
 
+
+
+
 ;; --- Schemas para Listas de Consulta ---
 (s/defschema ListaAlimentosLogadosResponse [AlimentoLogadoResponse])
 (s/defschema ListaExerciciosLogadosResponse [ExercicioLogadoResponse])
-
 ;; --- Schema para Mensagem de Sucesso Genérica ---
 (s/defschema MensagemResponse {:mensagem s/Str})
+
+
+
 
 
 ;; --- Definição das Rotas ---
 (defroutes exercicio-routes
            (context "/api/exercicio" []
                     :tags ["exercicios"]
+
+
+
+
+
                     (GET "/met" []
                          :query-params [query :- s/Str]
                          :return MetSuccessResponse
@@ -73,6 +109,12 @@
                                 (if (:erro resultado)
                                   (internal-server-error resultado)
                                   (ok resultado)))))
+
+
+
+
+
+
 
                     (POST "/log" []
                           :body [payload LogExercicioPayload]
@@ -89,20 +131,42 @@
                                  (internal-server-error resultado)
                                  (created (str "/api/log/exercicios/" (:id_registro_exercicio resultado)) resultado))))
 
+
+
+
+
+
                     ;; NOVA ROTA PARA APAGAR TODOS OS EXERCÍCIOS
                     (DELETE "/apagar-todos" []
                             :return MensagemResponse
                             :summary "Remove todos os exercícios registrados do banco de dados."
-                            (ok (db/apagar-todos-exercicios))))) ; Chama a função do api.db.clj
+                            (ok (db/apagar-todos-exercicios)))))
+
+
+
+
+
+
+
 
 (defroutes alimento-routes
            (context "/api" []
                     :tags ["alimentos"]
+
+
+
+
                     (POST "/adicionar-alimento" []
                           :return AlimentoLogadoResponse
                           :body [alimento-para-salvar AlimentoParaSalvar]
                           :summary "Adiciona um alimento específico (com data) ao banco de dados."
                           (ok (db/adicionar-alimento alimento-para-salvar)))
+
+
+
+
+
+
 
                     (POST "/buscar-info-alimentos" []
                           :body [payload AlimentoBuscaInfoPayload]
@@ -113,15 +177,28 @@
                                  (bad-request resultados)
                                  (ok resultados))))
 
+
+
+
+
+
                     (GET "/alimentos" []
                          :return ListaAlimentosLogadosResponse
                          :summary "Retorna todos os alimentos armazenados localmente"
                          (ok (db/listar-alimentos)))
 
+
+
+
+
                     (DELETE "/apagar-todos-alimentos" []
                             :return MensagemResponse ; Adicionado schema de retorno
                             :summary "Remove todos os alimentos do banco de dados"
-                            (ok (db/apagar-todos-alimentos))) ; Nome da função no db.clj
+                            (ok (db/apagar-todos-alimentos)))
+
+
+
+
 
                     (DELETE "/apagar-alimento" []
                             :query-params [nome :- s/Str]
@@ -129,14 +206,30 @@
                             :summary "Remove um alimento específico pelo nome"
                             (ok (db/apagar-alimento-por-nome nome)))))
 
+
+
+
+
+
 (defroutes log-consulta-routes
            (context "/api/log" []
                     :tags ["consultas-log"]
+
+
+
+
                     (GET "/alimentos" []
                          :query-params [data :- s/Str]
                          :return ListaAlimentosLogadosResponse
                          :summary "Lista todos os alimentos consumidos em uma data específica."
                          (ok (db/listar-alimentos-por-data data)))
+
+
+
+
+
+
+
 
                     (GET "/exercicios" []
                          :query-params [data :- s/Str]

@@ -3,11 +3,23 @@
       [clj-http.client :as client]
       [cheshire.core :as json]))
 
+
+
+
 ;; --- Configurações ---
 (def api-externa-calorias-url "https://caloriasporalimentoapi.herokuapp.com/api/calorias/")
 (def meu-backend-api-url "http://localhost:3000/api") ;; Ajuste a porta se necessário
 
+
+
+
+
+
 (defonce usuario-atual (atom {:nome nil :peso_kg nil}))
+
+
+
+
 
 ;; --- Funções Auxiliares ---
 (defn- fazer-requisicao-http [metodo url query-params payload]
@@ -25,6 +37,14 @@
                 {:erro true :status (:status response) :detalhes (:body response)}))
          (catch Exception e
            {:erro true :mensagem (str "Exceção HTTP: " (.getMessage e))})))
+
+
+
+
+
+
+
+
 
 ;; --- Funções do Menu ---
 (defn solicitar-info-usuario []
@@ -46,6 +66,13 @@
                   (do
                     (println "Peso deve ser maior que zero. Tente novamente.")
                     (solicitar-info-usuario))))))
+
+
+
+
+
+
+
 
 (defn adicionar-refeicao []
       (println "\n--- Adicionar Refeição ---")
@@ -90,6 +117,16 @@
                                                 (println (str "Alimento registado com sucesso! ID do Registo: " (:id_registro_consumo res-backend))))))
                                     (println "Escolha inválida ou cancelada.")))))))))))
 
+
+
+
+
+
+
+
+
+
+
 (defn adicionar-exercicio []
       (println "\n--- Adicionar Exercício ---")
       (print "Nome do exercício: ") (flush)
@@ -115,6 +152,13 @@
                                                  ", Data: " (:data_registro res-backend)
                                                  ", ID do Registo: " (:id_registro_exercicio res-backend)))))))))))
 
+
+
+
+
+
+
+
 (defn- extrair-numero-calorias [valor-calorias]
        "Extrai o primeiro número de uma string de calorias (ex: '133 kcal' -> 133)."
        (if (number? valor-calorias)
@@ -122,6 +166,15 @@
          (try
            (Integer/parseInt (first (re-seq #"\d+" (str valor-calorias))))
            (catch Exception _ 0))))
+
+
+
+
+
+
+
+
+
 
 (defn consultar-registros-dia []
       (println "\n--- Consultar Registos e Balanço do Dia ---")
@@ -139,7 +192,6 @@
                                                    (if (empty? alimentos)
                                                      (println "  Nenhum alimento registado para esta data.")
                                                      (doseq [a alimentos] (println (str "- " (:nome a) " (" (:quantidade a) "): " (:calorias a))))))
-                                                 ;; total-calorias-consumidas está agora disponível para o escopo externo deste let
 
                                                  (println (str "\n--- Exercícios Feitos em " data-consulta " ---"))
                                                  (let [exercicios-resp (fazer-requisicao-http :get (str meu-backend-api-url "/log/exercicios") {"data" data-consulta} nil)
@@ -151,9 +203,7 @@
                                                         (if (empty? exercicios)
                                                           (println "  Nenhum exercício registado para esta data.")
                                                           (doseq [e exercicios] (println (str "- " (:nome_exercicio_pt e) ": " (:calorias_queimadas e) " kcal")))))
-                                                      ;; total-calorias-gastas está agora disponível
 
-                                                      ;; Calcular e mostrar o balanço usando os totais já calculados
                                                       (println "\n-----------------------------------------")
                                                       (println (str "BALANÇO CALÓRICO DO DIA (" data-consulta "):"))
                                                       (println (str "  Calorias Consumidas: " total-calorias-consumidas " kcal"))
@@ -162,6 +212,10 @@
                                                       (println "-----------------------------------------")
                                                       (println "(Nota: Este balanço não inclui o metabolismo basal.)")))))))
 
+
+
+
+
 (defn mostrar-menu []
       (println "\nOpções:")
       (println "1. Adicionar refeição")
@@ -169,6 +223,12 @@
       (println "3. Consultar registos e balanço do dia")
       (println "4. Finalizar")
       (print "Escolha: ") (flush))
+
+
+
+
+
+
 
 (defn -main [& args]
       (solicitar-info-usuario)

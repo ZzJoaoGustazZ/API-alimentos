@@ -5,11 +5,12 @@
 
 (def base-url "https://caloriasporalimentoapi.herokuapp.com/api/calorias/")
 
+
+
+
+
 (defn buscar-info-alimentos
-      "Busca informações de calorias de um alimento via API externa.
-       Recebe apenas o nome do alimento como query.
-       Retorna uma lista de mapas (cada um com :descricao, :quantidade, :calorias)
-       ou um mapa de erro."
+
       [nome-alimento-query]
       (if (str/blank? nome-alimento-query)
         {:erro "Nome do alimento para busca é obrigatório."}
@@ -22,19 +23,28 @@
                 status (:status response)
                 body-str (:body response)]
 
+
                (if (= 200 status)
                  (if (and body-str (not (str/blank? body-str)))
                    (try
                      (let [parsed-body (json/parse-string body-str true)]
-                          (if (sequential? parsed-body) ; Verifica se é uma lista/vetor
+                          (if (sequential? parsed-body)
                             (if (seq parsed-body)
-                              (mapv (fn [item] ; Garante que os valores são strings
+                              (mapv (fn [item]
                                         {:descricao (str (:descricao item))
                                          :quantidade (str (:quantidade item))
                                          :calorias (str (:calorias item))})
                                     parsed-body)
-                              []) ; API retornou lista vazia
-                            (if (:erro parsed-body) ; API pode retornar um erro JSON
+                              []) ;
+                            (if (:erro parsed-body)
+
+
+
+
+
+
+
+
                               parsed-body
                               {:erro "Resposta da API externa não é uma lista de alimentos." :detalhes parsed-body})))
                      (catch Exception pe ; Erro ao parsear JSON
