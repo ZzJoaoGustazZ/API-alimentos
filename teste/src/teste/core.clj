@@ -32,9 +32,17 @@
       (print "Seu nome: ") (flush)
       (let [nome (read-line)]
            (print "Seu peso em kg (ex: 70.5): ") (flush)
-           (let [peso (try (Double/parseDouble (read-line)) (catch Exception _ (println "Peso inválido.") 0.0))]
-                (swap! usuario-atual assoc :nome nome :peso_kg peso)
-                (println (str "\nOlá, " nome "! Peso: " peso " kg.\n")))))
+           (let [peso (try (Double/parseDouble (read-line))
+                           (catch NumberFormatException _
+                             (println "Peso inválido. Tente novamente.")
+                             (solicitar-info-usuario)
+                             0.0)
+                           (catch Exception _ (println "Erro inesperado ao ler o peso.") 0.0))]
+                (if (> peso 0)
+                  (do
+                    (swap! usuario-atual assoc :nome nome :peso_kg peso)
+                    (println (str "\nOlá, " nome "! Peso: " peso " kg.\n")))
+                  (println "Peso deve ser maior que zero.")))))
 
 (defn adicionar-refeicao []
       (println "\n--- Adicionar Refeição ---")
@@ -43,35 +51,42 @@
            (print "Data da refeição (AAAA-MM-DD): ") (flush)
            (let [data-refeicao (read-line)]
                 (if (or (str/blank? nome-busca) (str/blank? data-refeicao))
-                  (println "Nome e data são obrigatórios.")
+                  (println "Nome da comida e data da refeição são obrigatórios.")
                   (do
-                    (println (str "Buscando '" nome-busca "'..."))
+                    (println (str "Buscando '" nome-busca "' na API externa..."))
                     (let [resultados-externos (fazer-requisicao-http :get api-externa-calorias-url {"descricao" nome-busca} nil)]
                          (cond
                            (:erro resultados-externos)
                            (println (str "Erro ao buscar na API externa: " (or (:detalhes resultados-externos) resultados-externos)))
+
                            (empty? resultados-externos)
-                           (println "Nenhum alimento encontrado com esse nome na API externa.")
+                           (println (str "Nenhum alimento encontrado com o nome '" nome-busca "' na API externa."))
+
+                           (not (sequential? resultados-externos))
+                           (println (str "Resposta inesperada da API externa (não é uma lista): " resultados-externos))
+
                            :else
                            (do
-                             (println "Alimentos encontrados (escolha um):")
+                             (println "Alimentos encontrados (escolha um para registar):")
                              (doseq [[idx item] (map-indexed vector resultados-externos)]
-                                    (println (str (inc idx) ". " (:descricao item) " (" (:quantidade item) ") - " (:calorias item))))
+                                    (println (str (inc idx) ". " (:descricao item)
+                                                  " (" (:quantidade item) ") - " (:calorias item))))
                              (print "Número do alimento (ou 0 para cancelar): ") (flush)
                              (let [idx-str (read-line)
                                    idx (try (dec (Integer/parseInt idx-str)) (catch Exception _ -1))]
                                   (if (and (>= idx 0) (< idx (count resultados-externos)))
-                                    (let [escolhido (nth resultados-externos idx)
-                                          alimento-para-salvar {:nome (:descricao escolhido) ; Usamos :descricao como :nome
-                                                                :quantidade (:quantidade escolhido)
-                                                                :calorias (:calorias escolhido)
+                                    (let [info-alimento-escolhido (nth resultados-externos idx)
+                                          alimento-para-salvar {:nome (:descricao info-alimento-escolhido)
+                                                                :quantidade (:quantidade info-alimento-escolhido)
+                                                                :calorias (:calorias info-alimento-escolhido)
                                                                 :data_refeicao data-refeicao}]
-                                         (println (str "Registando no seu diário: " (:nome alimento-para-salvar)))
-                                         (let [res-backend (fazer-requisicao-http :post (str meu-backend-api-url "/alimentos/registrar") nil alimento-para-salvar)]
+                                         (println (str "Registando '" (:nome alimento-para-salvar) "' no seu diário para a data " data-refeicao "..."))
+                                         ;; CORREÇÃO DO ENDPOINT CHAMADO:
+                                         (let [res-backend (fazer-requisicao-http :post (str meu-backend-api-url "/adicionar-alimento") nil alimento-para-salvar)]
                                               (if (:erro res-backend)
                                                 (println (str "Erro ao registar no backend: " (or (:detalhes res-backend) res-backend)))
-                                                (println (str "Alimento registado! ID: " (:id_registro res-backend))))))
-                                    (println "Escolha inválida/cancelada.")))))))))))
+                                                (println (str "Alimento registado com sucesso! ID do Registo: " (:id_registro_consumo res-backend))))))
+                                    (println "Escolha inválida ou cancelada.")))))))))))
 
 (defn adicionar-exercicio []
       (println "\n--- Adicionar Exercício ---")
@@ -84,7 +99,7 @@
                 (let [data-exercicio (read-line)
                       peso-kg (:peso_kg @usuario-atual)]
                      (if (or (str/blank? nome-original) (<= duracao 0) (str/blank? data-exercicio) (nil? peso-kg) (<= peso-kg 0))
-                       (println "Nome, duração, data e peso válidos são obrigatórios.")
+                       (println "Nome, duração (maior que 0), data e peso válidos são obrigatórios.")
                        (let [payload-exercicio {:nome_exercicio_original nome-original
                                                 :duracao_min duracao
                                                 :peso_kg peso-kg
@@ -94,9 +109,9 @@
                                  (if (:erro res-backend)
                                    (println (str "Erro ao registar exercício no backend: " (or (:detalhes res-backend) res-backend)))
                                    (println (str "Exercício registado: " (:nome_exercicio_pt res-backend)
-                                                 ", Calorias: " (:calorias_queimadas res-backend)
+                                                 ", Calorias Queimadas: " (:calorias_queimadas res-backend)
                                                  ", Data: " (:data_registro res-backend)
-                                                 ", ID: " (:id_registro_exercicio res-backend)))))))))))
+                                                 ", ID do Registo: " (:id_registro_exercicio res-backend)))))))))))
 
 (defn consultar-registros-dia []
       (println "\n--- Consultar Registos do Dia ---")
@@ -105,16 +120,16 @@
            (if (str/blank? data-consulta) (println "Data é obrigatória.")
                                           (do
                                             (println (str "\n--- Alimentos em " data-consulta " ---"))
-                                            (let [alimentos (fazer-requisicao-http :get (str meu-backend-api-url "/alimentos/registrados/data") {"data" data-consulta} nil)]
+                                            (let [alimentos (fazer-requisicao-http :get (str meu-backend-api-url "/log/alimentos") {"data" data-consulta} nil)]
                                                  (if (or (:erro alimentos) (empty? alimentos))
-                                                   (println (or (:detalhes alimentos) "Nenhum alimento registado."))
+                                                   (println (str "  " (or (:detalhes alimentos) "Nenhum alimento registado para esta data.")))
                                                    (doseq [a alimentos] (println (str "- " (:nome a) " (" (:quantidade a) "): " (:calorias a))))))
+
                                             (println (str "\n--- Exercícios em " data-consulta " ---"))
-                                            (let [exercicios (fazer-requisicao-http :get (str meu-backend-api-url "/exercicios/registrados/data") {"data" data-consulta} nil)]
+                                            (let [exercicios (fazer-requisicao-http :get (str meu-backend-api-url "/log/exercicios") {"data" data-consulta} nil)]
                                                  (if (or (:erro exercicios) (empty? exercicios))
-                                                   (println (or (:detalhes exercicios) "Nenhum exercício registado."))
+                                                   (println (str "  " (or (:detalhes exercicios) "Nenhum exercício registado para esta data.")))
                                                    (doseq [e exercicios] (println (str "- " (:nome_exercicio_pt e) ": " (:calorias_queimadas e) " kcal")))))
-                                            ;; Lógica de cálculo de balanço pode ser adicionada aqui
                                             ))))
 
 (defn mostrar-menu []

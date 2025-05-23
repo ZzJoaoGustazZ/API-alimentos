@@ -1,46 +1,55 @@
 (ns api.db
     (:require [cheshire.core :as json]
       [clojure.java.io :as io]
-      [clojure.string :as str])) ; str/blank? é útil
+      [clojure.string :as str]))
 
-(def alimentos-db-path "db/alimentos.json")
-(def exercicios-db-path "db/exercicios.json")
+(def db-dir-path "db")
+(def alimentos-db-path (str db-dir-path "/alimentos.json"))
+(def exercicios-db-path (str db-dir-path "/exercicios.json"))
 
-;; --- Funções Genéricas Simplificadas para Leitura/Escrita ---
-(defn- ler-json-do-arquivo [path-arquivo]
-       "Lê e parseia um ficheiro JSON, retornando uma lista vazia em caso de erro ou ficheiro inexistente/vazio."
+(defn- garantir-diretorio-db! []
+       (let [db-dir (io/file db-dir-path)]
+            (when-not (.exists db-dir)
+                      (try
+                        (.mkdirs db-dir)
+                        (println (str "Diretório '" db-dir-path "' criado."))
+                        (catch Exception e
+                          (println (str "Falha ao criar diretório '" db-dir-path "': " (.getMessage e))))))))
+
+(defn- ler-lista-do-arquivo [path-arquivo]
+       (garantir-diretorio-db!)
        (if (.exists (io/file path-arquivo))
          (let [conteudo (slurp path-arquivo)]
               (if (str/blank? conteudo)
                 []
                 (try
                   (json/parse-string conteudo true)
-                  (catch Exception _ [])))) ; Retorna lista vazia em caso de erro de parse
+                  (catch Exception _ []))))
          []))
 
-(defn- salvar-json-no-arquivo [path-arquivo dados-lista]
-       "Salva uma lista de dados num ficheiro JSON."
+(defn- salvar-lista-no-arquivo [path-arquivo dados-lista]
+       (garantir-diretorio-db!)
        (try
-         ;; Garante que o diretório pai existe (forma simples)
          (io/make-parents path-arquivo)
          (spit path-arquivo (json/generate-string dados-lista {:pretty true}))
          (catch Exception e
            (println (str "AVISO: Falha ao salvar o arquivo " path-arquivo ": " (.getMessage e))))))
 
-;; --- Funções para Alimentos (Estilo Original) ---
+;; --- Funções para Alimentos ---
 
 (defn ler-alimentos []
-      (ler-json-do-arquivo alimentos-db-path))
+      (ler-lista-do-arquivo alimentos-db-path))
 
 (defn salvar-alimentos [alimentos]
-      (salvar-json-no-arquivo alimentos-db-path alimentos))
+      (salvar-lista-no-arquivo alimentos-db-path alimentos))
 
 (defn adicionar-alimento
       "Adiciona um alimento à lista.
        O mapa 'alimento' deve conter :nome, :quantidade, :calorias e :data_refeicao."
       [alimento]
       (let [alimentos-atuais (ler-alimentos)
-            alimento-com-id (assoc alimento :id_registro (System/currentTimeMillis))]
+            ;; CORREÇÃO AQUI: Usar :id_registro_consumo para consistência com o schema da rota
+            alimento-com-id (assoc alimento :id_registro_consumo (System/currentTimeMillis))]
            (salvar-alimentos (conj alimentos-atuais alimento-com-id))
            alimento-com-id))
 
@@ -62,20 +71,22 @@
            (salvar-alimentos filtrado)
            {:mensagem (str "Alimentos com nome \"" nome "\" foram removidos.")}))
 
-;; --- Funções para Exercícios (Estilo Original) ---
+;; --- Funções para Exercícios ---
 
 (defn ler-exercicios []
-      (ler-json-do-arquivo exercicios-db-path))
+      (ler-lista-do-arquivo exercicios-db-path))
 
 (defn salvar-exercicios [exercicios]
-      (salvar-json-no-arquivo exercicios-db-path exercicios))
+      (salvar-lista-no-arquivo exercicios-db-path exercicios))
 
 (defn adicionar-exercicio
       "Adiciona um exercício à lista.
        O mapa 'exercicio' deve conter :nome_exercicio_pt, :calorias_queimadas e :data_registro."
       [exercicio]
       (let [exercicios-atuais (ler-exercicios)
-            exercicio-com-id (assoc exercicio :id_registro (System/currentTimeMillis))]
+            ;; CORREÇÃO AQUI (para consistência, embora o erro não fosse aqui):
+            ;; Usar :id_registro_exercicio para corresponder ao schema ExercicioLogadoResponse
+            exercicio-com-id (assoc exercicio :id_registro_exercicio (System/currentTimeMillis))]
            (salvar-exercicios (conj exercicios-atuais exercicio-com-id))
            exercicio-com-id))
 
