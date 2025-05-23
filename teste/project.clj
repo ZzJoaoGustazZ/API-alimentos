@@ -1,10 +1,9 @@
-(defproject teste "0.1.0-SNAPSHOT"
-  :description "FIXME: write description"
-  :url "http://example.com/FIXME"
-  :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
-            :url "https://www.eclipse.org/legal/epl-2.0/"}
-  :dependencies [[org.clojure/clojure "1.11.1"]]
-  :main ^:skip-aot teste.core
-  :target-path "target/%s"
-  :profiles {:uberjar {:aot :all
-                       :jvm-opts ["-Dclojure.compiler.direct-linking=true"]}})
+(defproject teste "0.1.0-SNAPSHOT" ; Nome do projeto frontend
+            :description "Frontend CLI para API de Alimentos"
+            :dependencies [[org.clojure/clojure "1.10.3"] ; Use a mesma versão do Clojure do seu backend
+                           [clj-http "3.12.3"]      ; Dependência para chamadas HTTP
+                           [cheshire "5.10.0"]]     ; Dependência para JSON (use a mesma versão do backend)
+            :main ^:skip-aot teste.core
+            :target-path "target/%s"
+            :profiles {:uberjar {:aot :all
+                                 :jvm-opts ["-Dclojure.compiler.direct-linking=true"]}})
