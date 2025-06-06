@@ -1,3 +1,15 @@
+# Versão Final 2.0
+
+## Atualizações feitas:
+* **Código do DB alterado para ATOM (altera em ATOM e salva em JSON)**
+* **Criação de Endpoints para registro de usuário e periodo de consulta**
+
+
+
+
+
+
+
 # API de Alimentos
 
 API criada para AV3 de Programação Funcional e visa mostrar as calorias ganhadas ou perdidas num intervalo de tempo.
