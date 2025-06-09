@@ -33,9 +33,6 @@
          (try (Integer/parseInt (first (re-seq #"\d+" valor-calorias))) (catch Exception _ 0))
          :else 0))
 
-
-
-
 ;; --- Funções de Usuário ---
 (defn carregar-ou-cadastrar-usuario []
       (println "Bem-vindo(a) ao Diário de Calorias e Exercícios!")
@@ -49,7 +46,7 @@
                      usr-existente (fazer-requisicao-http :get url-busca nil nil)]
                     (if (and (not (:erro usr-existente)) (:id_usuario usr-existente))
                       (do
-                        (swap! usuario-atual merge usr-existente) ; Assume que o backend retorna os campos com os mesmos nomes
+                        (swap! usuario-atual merge usr-existente)
                         (println (str "\nOlá, " (:nome_usuario @usuario-atual) "! Dados carregados.\n"
                                       "Peso: " (:peso @usuario-atual) " kg, Altura: " (:altura @usuario-atual) " cm, "
                                       "Idade: " (:idade @usuario-atual) ", Sexo: " (:sexo @usuario-atual) "\n")))
@@ -83,7 +80,10 @@
                                                                                                                                                                                             (empty? res-ext) (println "Nenhum alimento encontrado.")
                                                                                                                                                                                             (not (sequential? res-ext)) (println (str "Resposta inesperada da API externa: " (pr-str res-ext)))
                                                                                                                                                                                             :else (do (println "Alimentos encontrados:")
-                                                                                                                                                                                                      (doseq [[idx item] (map-indexed vector res-ext)] (println (str (inc idx) ". " (:descricao item) " (" (:quantidade item) ") - " (:calorias item) " kcal")))
+                                                                                                                                                                                                      (run! println
+                                                                                                                                                                                                            (map-indexed (fn [idx item]
+                                                                                                                                                                                                                             (str (inc idx) ". " (:descricao item) " (" (:quantidade item) ") - " (:calorias item) " kcal"))
+                                                                                                                                                                                                                         res-ext))
                                                                                                                                                                                                       (print "Número do alimento (0 para cancelar): ") (flush)
                                                                                                                                                                                                       (let [idx (try (dec (Integer/parseInt (read-line))) (catch Exception _ -1))]
                                                                                                                                                                                                            (if (and (>= idx 0) (< idx (count res-ext)))
@@ -98,14 +98,19 @@
       (println "\n--- Adicionar Exercício ---")
       (print "Nome do exercício: ") (flush) (let [nome-ex (read-line)]
                                                  (print "Tempo (minutos): ") (flush) (let [dur-str (read-line) dur (try (Integer/parseInt dur-str) (catch Exception _ 0))]
-                                                                                          (print "Data (AAAA-MM-DD): ") (flush) (let [data-ex (read-line) peso-usr (:peso @usuario-atual)] ; Ajustado para pegar :peso do atom
+                                                                                          (print "Data (AAAA-MM-DD): ") (flush) (let [data-ex (read-line) peso-usr (:peso @usuario-atual)]
                                                                                                                                      (if (or (str/blank? nome-ex) (<= dur 0) (str/blank? data-ex) (nil? peso-usr) (<= peso-usr 0)) (println "Dados inválidos.")
                                                                                                                                                                                                                                    (let [payload {:nome_exercicio_original nome-ex, :duracao_min dur, :peso_kg peso-usr, :data_exercicio data-ex}
                                                                                                                                                                                                                                          res-back (fazer-requisicao-http :post (str meu-backend-api-url "/exercicio/log") nil payload)]
                                                                                                                                                                                                                                         (if (:erro res-back) (println (str "Erro ao registrar: " (pr-str res-back)))
+
+
+
+
+
+
                                                                                                                                                                                                                                                              (println (str "Exercício: " (:nome_exercicio_pt res-back) ", Calorias: " (:calorias_queimadas res-back) ", Data: " (:data_registro res-back) ", ID: " (:id_registro_exercicio res-back))))))))))
 
-;; MODIFICADO: Consultar extrato e saldo por período
 (defn consultar-extrato-e-saldo-periodo []
       (println "\n--- Consultar Extrato e Saldo por Período ---")
       (print "Digite a DATA DE INÍCIO do período (AAAA-MM-DD): ") (flush) (let [data-inicio (read-line)]
@@ -127,11 +132,13 @@
 
                                                                                                                                                                        (when (seq alimentos)
                                                                                                                                                                              (println "\n  Alimentos Consumidos:")
-                                                                                                                                                                             (doseq [a alimentos] (println (str "    " (:data a) " - " (:nome a) " (" (:quantidade a) "): " (:calorias_consumidas a)))))
+                                                                                                                                                                             (run! println
+                                                                                                                                                                                   (map #(str "    " (:data %) " - " (:nome %) " (" (:quantidade %) "): " (:calorias_consumidas %)) alimentos)))
 
                                                                                                                                                                        (when (seq exercicios)
                                                                                                                                                                              (println "\n  Exercícios Feitos:")
-                                                                                                                                                                             (doseq [e exercicios] (println (str "    " (:data e) " - " (:nome_exercicio_pt e) ": " (:calorias_gastas e) " kcal"))))
+                                                                                                                                                                             (run! println
+                                                                                                                                                                                   (map #(str "    " (:data %) " - " (:nome_exercicio_pt %) ": " (:calorias_gastas %) " kcal") exercicios)))
 
                                                                                                                                                                        (println "\n-----------------------------------------")
                                                                                                                                                                        (println (str "SALDO CALÓRICO DO PERÍODO (" data-inicio " a " data-fim "):"))
@@ -141,31 +148,49 @@
                                                                                                                                                                        (println "-----------------------------------------")
                                                                                                                                                                        (println "(Nota: Este balanço não inclui o metabolismo basal.)"))))))))))
 
+
+
+
+
+
+
+
 (defn mostrar-menu []
       (println "\nOpções:")
       (println "1. Adicionar refeição")
       (println "2. Adicionar exercício")
-      (println "3. Consultar extrato e saldo de calorias por período") ; Atualizado
+      (println "3. Consultar extrato e saldo de calorias por período")
       (println "4. Finalizar")
       (print "Escolha: ") (flush))
+
+
+
+
+
+(defn ciclo-principal []
+      (mostrar-menu)
+      (let [opcao (read-line)]
+           (condp = opcao
+                  "1" (do (adicionar-refeicao) (ciclo-principal)) ;; Chamada recursiva para continuar
+                  "2" (do (adicionar-exercicio) (ciclo-principal)) ;; Chamada recursiva para continuar
+                  "3" (do (consultar-extrato-e-saldo-periodo) (ciclo-principal)) ;; Chamada recursiva para continuar
+                  "4" (let [usr @usuario-atual] ;; Condição de parada: não há chamada recursiva
+                           (println "\nFinalizando. Até mais, " (:nome_usuario usr) "!")
+                           (println "--- Seus Dados ---")
+                           (println (str "Nome: " (:nome_usuario usr)))
+                           (println (str "Peso: " (:peso usr) " kg"))
+                           (println (str "Altura: " (:altura usr) " cm"))
+                           (println (str "Idade: " (:idade usr) " anos"))
+                           (println (str "Sexo: " (:sexo usr))))
+                  (do (println "Opção inválida.") (ciclo-principal))))) ;; Chamada recursiva para continuar
+
+
+
 
 (defn -main [& args]
       (carregar-ou-cadastrar-usuario)
       (if (nil? (:id_usuario @usuario-atual))
         (println "Não foi possível iniciar a aplicação sem dados de usuário.")
-        (loop []
-              (mostrar-menu)
-              (let [opcao (read-line)]
-                   (condp = opcao
-                          "1" (do (adicionar-refeicao) (recur))
-                          "2" (do (adicionar-exercicio) (recur))
-                          "3" (do (consultar-extrato-e-saldo-periodo) (recur)) ; Atualizado
-                          "4" (let [usr @usuario-atual]
-                                   (println "\nFinalizando. Até mais, " (:nome_usuario usr) "!")
-                                   (println "--- Seus Dados ---")
-                                   (println (str "Nome: " (:nome_usuario usr)))
-                                   (println (str "Peso: " (:peso usr) " kg")) ; Ajustado para :peso
-                                   (println (str "Altura: " (:altura usr) " cm")) ; Ajustado para :altura
-                                   (println (str "Idade: " (:idade usr) " anos"))
-                                   (println (str "Sexo: " (:sexo usr))))
-                          (do (println "Opção inválida.") (recur)))))))
+
+
+        (ciclo-principal)))

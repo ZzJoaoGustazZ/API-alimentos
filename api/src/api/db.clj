@@ -3,11 +3,21 @@
       [clojure.java.io :as io]
       [clojure.string :as str]))
 
+
+
+
+
+
 (def db-dir-path "db")
 
 (def alimentos-db-path (str db-dir-path "/alimentos.json"))
 (def exercicios-db-path (str db-dir-path "/exercicios.json"))
 (def usuarios-db-path (str db-dir-path "/usuarios.json"))
+
+
+
+
+
 
 ;; --- Funções Auxiliares para Arquivos ---
 
@@ -19,6 +29,11 @@
                         (println (str "Diretório '" db-dir-path "' criado."))
                         (catch Exception e
                           (println (str "Falha ao criar diretório '" db-dir-path "': " (.getMessage e))))))))
+
+
+
+
+
 
 (defn- ler-lista-do-arquivo [path-arquivo]
        (garantir-diretorio-db!)
@@ -33,6 +48,11 @@
                     []))))
          []))
 
+
+
+
+
+
 (defn- salvar-lista-no-arquivo [path-arquivo dados-lista]
        (garantir-diretorio-db!)
        (try
@@ -41,11 +61,26 @@
          (catch Exception e
            (println (str "AVISO: Falha ao salvar o arquivo " path-arquivo ": " (.getMessage e))))))
 
+
+
+
+
+
+
+
+
+
+
 ;; --- Atoms para Estado em Memória ---
 
 (defonce alimentos-atom (atom (ler-lista-do-arquivo alimentos-db-path)))
 (defonce exercicios-atom (atom (ler-lista-do-arquivo exercicios-db-path)))
 (defonce usuarios-atom (atom (ler-lista-do-arquivo usuarios-db-path)))
+
+
+
+
+
 
 ;; --- Funções de Persistência ---
 
@@ -58,8 +93,17 @@
 (defn salvar-usuarios! []
       (salvar-lista-no-arquivo usuarios-db-path @usuarios-atom))
 
+
+
+
+
+
+
 ;; --- Funções para Alimentos ---
 (defn ler-alimentos [] @alimentos-atom)
+
+
+
 
 (defn adicionar-alimento [alimento]
       (let [alimento-com-id (assoc alimento :id_registro_consumo (System/currentTimeMillis))]
@@ -67,7 +111,13 @@
            (salvar-alimentos!)
            alimento-com-id))
 
+
+
+
 (defn listar-alimentos [] (ler-alimentos))
+
+
+
 
 (defn listar-alimentos-por-data [data-str]
       (if (str/blank? data-str)
@@ -77,6 +127,12 @@
                            (not (str/blank? data-refeicao))
                            (= data-refeicao data-str)))
                 (ler-alimentos))))
+
+
+
+
+
+
 
 (defn listar-alimentos-por-intervalo-datas [data-inicio-str data-fim-str]
       (println (str "[DB] Buscando alimentos entre " data-inicio-str " e " data-fim-str))
@@ -101,17 +157,36 @@
 
 
 
+
+
+
 (defn apagar-todos-alimentos []
       (reset! alimentos-atom []) (salvar-alimentos!)
       {:mensagem "Todos os alimentos foram removidos."})
+
+
+
+
+
 
 (defn apagar-alimento-por-nome [nome]
       (swap! alimentos-atom (fn [atuais] (vec (remove #(= (:nome %) nome) atuais))))
       (salvar-alimentos!)
       {:mensagem (str "Alimentos com nome \"" nome "\" foram removidos.")})
 
+
+
+
+
+
 ;; --- Funções para Exercícios ---
+
 (defn ler-exercicios [] @exercicios-atom)
+
+
+
+
+
 
 (defn adicionar-exercicio [exercicio]
       (let [exercicio-com-id (assoc exercicio :id_registro_exercicio (System/currentTimeMillis))]
@@ -119,7 +194,17 @@
            (salvar-exercicios!)
            exercicio-com-id))
 
+
+
+
+
 (defn listar-exercicios [] (ler-exercicios))
+
+
+
+
+
+
 
 (defn listar-exercicios-por-data [data-str]
       (if (str/blank? data-str)
@@ -130,8 +215,15 @@
                            (= data-registro data-str)))
                 (ler-exercicios))))
 
+
+
+
+
+
+
+
 (defn listar-exercicios-por-intervalo-datas [data-inicio-str data-fim-str]
-      (println (str "[DB] Buscando exercícios entre " data-inicio-str " e " data-fim-str))
+      (println (str "[DB] Buscando exercicios entre " data-inicio-str " e " data-fim-str))
       (if (or (str/blank? data-inicio-str) (str/blank? data-fim-str))
         (do
           (println "[DB] AVISO: Data de início e/ou fim não fornecida(s) para o intervalo de exercícios.")
@@ -153,22 +245,59 @@
 
 
 
+
+
+
+
+
+
+
 (defn apagar-todos-exercicios []
       (reset! exercicios-atom []) (salvar-exercicios!)
       {:mensagem "Todos os exercícios foram removidos."})
+
+
+
+
+
+
+
 
 (defn apagar-exercicio-por-nome [nome-exercicio-pt]
       (swap! exercicios-atom (fn [atuais] (vec (remove #(= (:nome_exercicio_pt %) nome-exercicio-pt) atuais))))
       (salvar-exercicios!)
       {:mensagem (str "Exercícios com nome \"" nome-exercicio-pt "\" foram removidos.")})
 
+
+
+
+
+
+
+
+
 ;; --- Funções para Usuários ---
 (defn ler-usuarios [] @usuarios-atom)
+
+
+
+
+
 
 (defn encontrar-usuario-por-nome [nome-usuario-param] ; Renomeado o parâmetro para evitar confusão
       (if-not (string? nome-usuario-param)
               (do (println "[DB] ERRO em encontrar-usuario-por-nome: nome-usuario-param não é string - " (pr-str nome-usuario-param)) nil)
+
+
+
+
               (first (filter #(= (:nome_usuario %) nome-usuario-param) (ler-usuarios)))))
+
+
+
+
+
+
 
 (defn adicionar-usuario [dados-usuario]
       (let [{:keys [nome_usuario altura peso idade sexo]} dados-usuario] ; nome_usuario (underscore) é definido aqui
@@ -179,6 +308,8 @@
                  (not (number? peso)) (<= peso 0)
                  (not (integer? idade)) (<= idade 0)
                  (not (string? sexo)) (str/blank? sexo))
+
+
              (cond ;; Mensagens de erro específicas para a validação
                (not (string? nome_usuario)) {:erro "nome_usuario deve ser uma string."}
                (str/blank? nome_usuario) {:erro "nome_usuario não pode ser vazio."}
@@ -191,6 +322,8 @@
                (not (string? sexo)) {:erro "sexo deve ser uma string."}
                (str/blank? sexo) {:erro "sexo não pode ser vazio."}
                :else {:erro "Erro de validação desconhecido."})
+
+
 
              ;; Cláusula 2: Verifica se o usuário já existe
              ;; Usa nome_usuario (underscore) consistentemente
@@ -207,11 +340,15 @@
                   (salvar-usuarios!)
                   usuario-novo))))
 
+
+
+
+
+
+
 (defn apagar-todos-usuarios! []
       (reset! usuarios-atom []) (salvar-usuarios!)
       {:mensagem "Todos os usuários foram removidos."})
 
-;; --- Função Geral para Limpar Tudo ---
-(defn apagar-tudo-db []
-      (apagar-todos-alimentos) (apagar-todos-exercicios) (apagar-todos-usuarios!)
-      {:mensagem "Todos os dados de alimentos, exercícios e usuários foram removidos do banco de dados."})
+
+

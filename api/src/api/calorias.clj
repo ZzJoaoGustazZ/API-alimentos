@@ -45,6 +45,34 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                               parsed-body
                               {:erro "Resposta da API externa não é uma lista de alimentos." :detalhes parsed-body})))
                      (catch Exception pe ; Erro ao parsear JSON

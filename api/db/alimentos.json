@@ -1,61 +1,13 @@
 [ {
-  "nome" : "Arroz integral",
-  "quantidade" : "1 xícara (185 g)",
-  "calorias" : "670 kcal kcal",
-  "data_refeicao" : "2025-12-10",
-  "id_registro_consumo" : 1749231820485
-}, {
-  "nome" : "Arroz integral",
-  "quantidade" : "1 xícara (195 g)",
-  "calorias" : "757 kcal kcal",
-  "data_refeicao" : "2025-12-01",
-  "id_registro_consumo" : 1749231808740
-}, {
-  "nome" : "Leite de coco",
-  "quantidade" : "1 xícara (240 g)",
-  "calorias" : "552 kcal kcal",
-  "data_refeicao" : "20-20-22",
-  "id_registro_consumo" : 1749228863813
-}, {
-  "nome" : "Carne de porco moída",
-  "quantidade" : "1 pacote (500 g)",
-  "calorias" : "1315 kcal kcal",
-  "data_refeicao" : "20-20-21",
-  "id_registro_consumo" : 1749228850367
-}, {
-  "nome" : "Arroz doce",
-  "quantidade" : "1 xícara (225 g)",
-  "calorias" : "302 kcal kcal",
-  "data_refeicao" : "20-20-20",
-  "id_registro_consumo" : 1749228785380
-}, {
   "nome" : "Sopa de tomate e arroz",
   "quantidade" : "1 xícara (247 g)",
   "calorias" : "116 kcal kcal",
-  "data_refeicao" : "20-20-23",
-  "id_registro_consumo" : 1748996610883
+  "data_refeicao" : "2020-12-15",
+  "id_registro_consumo" : 1749498301818
 }, {
-  "nome" : "Leite de arroz",
-  "quantidade" : "1 xícara (245 g)",
-  "calorias" : "120 kcal kcal",
-  "data_refeicao" : "20-20-21",
-  "id_registro_consumo" : 1748996599131
-}, {
-  "nome" : "Leite de arroz",
-  "quantidade" : "1 xícara (245 g)",
-  "calorias" : "120 kcal kcal",
-  "data_refeicao" : "20-20-20",
-  "id_registro_consumo" : 1748996581013
-}, {
-  "nome" : "Leite de arroz",
-  "quantidade" : "1 xícara (245 g)",
-  "calorias" : "120 kcal kcal",
-  "data_refeicao" : "20-20-23",
-  "id_registro_consumo" : 1748993146783
-}, {
-  "nome" : "Leite de arroz",
-  "quantidade" : "1 xícara (245 g)",
-  "calorias" : "120 kcal kcal",
-  "data_refeicao" : "20-20-21",
-  "id_registro_consumo" : 1748993134423
+  "nome" : "Purê de batatas",
+  "quantidade" : "1 xícara (242 g)",
+  "calorias" : "215 kcal kcal",
+  "data_refeicao" : "2020-12-01",
+  "id_registro_consumo" : 1749498217100
 } ]

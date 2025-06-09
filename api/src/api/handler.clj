@@ -1,9 +1,13 @@
 (ns api.handler
     (:require
       [compojure.api.sweet :refer :all]
-      ;; Assumindo que seu api.routes.clj define 'alimento-routes' e 'exercicio-routes'
-      ;; e 'log-consulta-routes' se você as mantiver.
-      [api.routes :refer [alimento-routes exercicio-routes log-consulta-routes usuario-routes extrato-routes]]
+
+      [api.routes :refer [alimento-routes
+                          exercicio-routes
+                          log-consulta-routes
+                          usuario-routes
+                          extrato-routes]]
+
       [compojure.route :as route]
       [ring.util.http-response :as http-response]))
 
@@ -15,11 +19,20 @@
       :data {:info {:title "API de Calorias e Exercícios (Básica)"
                     :description "API para registar alimentos e exercícios."
                     :version "3.0.0"}}}}
+
+
+
+
     extrato-routes
     alimento-routes
     exercicio-routes
     log-consulta-routes
-    usuario-routes; Mantenha se você tem os endpoints de consulta por data
+    usuario-routes
+
+
+
+
+
 
     (route/not-found
       (http-response/not-found {:erro "Endpoint da API não encontrado."}))))
